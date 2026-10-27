@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Item Management 图标预览</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#f3f4f6; margin:0; padding:32px; color:#111827; }
+  h1 { font-size:22px; margin-bottom:24px; }
+  .group { margin-bottom:32px; }
+  .group h2 { font-size:18px; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+  .group h2 .badge { font-size:12px; background:#8B5CF6; color:#fff; padding:2px 10px; border-radius:999px; }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; max-width:760px; }
+  .card { background:#fff; border-radius:20px; padding:18px; display:flex; flex-direction:column; align-items:center; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,.05); }
+  .card img { width:64px; height:64px; }
+  .card span { font-size:13px; color:#6B7280; font-weight:600; }
+</style>
+</head>
+<body>
+  <h1>Item Management 图标预览</h1>
+
+  <div class="group">
+    <h2>运动 Sports <span class="badge">4</span></h2>
+    <div class="grid">
+      <div class="card"><img src="sports/running.svg"><span>跑步 running</span></div>
+      <div class="card"><img src="sports/basketball.svg"><span>篮球 basketball</span></div>
+      <div class="card"><img src="sports/soccer.svg"><span>足球 soccer</span></div>
+      <div class="card"><img src="sports/fitness.svg"><span>健身 fitness</span></div>
+    </div>
+  </div>
+
+  <div class="group">
+    <h2>食物 Food <span class="badge">4</span></h2>
+    <div class="grid">
+      <div class="card"><img src="food/burger.svg"><span>汉堡 burger</span></div>
+      <div class="card"><img src="food/fries.svg"><span>薯条 fries</span></div>
+      <div class="card"><img src="food/steak.svg"><span>牛排 steak</span></div>
+      <div class="card"><img src="food/cola.svg"><span>可乐 cola</span></div>
+    </div>
+  </div>
+
+  <div class="group">
+    <h2>日常任务 Daily Tasks <span class="badge">4</span></h2>
+    <div class="grid">
+      <div class="card"><img src="daily/homework.svg"><span>写作业 homework</span></div>
+      <div class="card"><img src="daily/reading.svg"><span>读书 reading</span></div>
+      <div class="card"><img src="daily/work.svg"><span>工作 work</span></div>
+      <div class="card"><img src="daily/sleep.svg"><span>睡觉 sleep</span></div>
+    </div>
+  </div>
+</body>
+</html>
