@@ -54,18 +54,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                val pagerState = rememberPagerState(pageCount = { 2 })
+                val pagerState = rememberPagerState(pageCount = { 3 })
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Page
                 ) {
-                    // Swipe left or right to look at the two screen layouts.
+                    // Swipe left or right to look at the three screen layouts.
                     HorizontalPager(state = pagerState) { page ->
-                        if (page == 0) {
-                            StartScreen()
-                        } else {
-                            OptionSelectionScreen()
+                        when (page) {
+                            0 -> StartScreen()
+                            1 -> OptionSelectionScreen()
+                            else -> DecisionScreen()
                         }
                     }
                 }
@@ -217,11 +217,7 @@ private fun OptionSelectionScreen() {
 @Composable
 private fun OptionCategory(title: String, options: List<String>) {
     Column(modifier = Modifier.padding(horizontal = 18.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("swipe ›", color = Muted, fontSize = 12.sp)
-        }
+        Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(10.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(options) { option ->
@@ -279,6 +275,125 @@ private fun OptionChip(option: String) {
     )
 }
 
+
+@Composable
+private fun DecisionScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 22.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("‹", modifier = Modifier.padding(horizontal = 6.dp), color = Purple, fontSize = 34.sp)
+            Text(
+                text = "Decision",
+                modifier = Modifier.weight(1f),
+                color = Ink,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.width(28.dp))
+        }
+
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // The dice in the middle of the screen.
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .shadow(12.dp, RoundedCornerShape(28.dp))
+                .background(Color.White, RoundedCornerShape(28.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("🎲", fontSize = 64.sp)
+        }
+
+        Spacer(modifier = Modifier.height(26.dp))
+
+        // The options the user picked, three small cards in one row.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OptionCard("🍕", "Pizza", Modifier.weight(1f))
+            OptionCard("🍔", "Burger", Modifier.weight(1f))
+            OptionCard("🥩", "Steak", Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(22.dp))
+
+        // The purple box that will show the result.
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Purple, RoundedCornerShape(22.dp))
+                .padding(vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "🎲 RESULT",
+                color = Color.White.copy(alpha = 0.75f),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Pizza",
+                color = Color.White,
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple)
+        ) {
+            Text("Roll", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,
+                contentColor = Purple
+            )
+        ) {
+            Text("Share Result", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+private fun OptionCard(emoji: String, name: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(16.dp))
+            .background(Color.White, RoundedCornerShape(16.dp))
+            .padding(vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(emoji, fontSize = 24.sp)
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(name, color = Ink, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
 @Composable
 private fun DiceIllustration() {
     Box(
@@ -312,5 +427,13 @@ private fun StartScreenPreview() {
 private fun OptionSelectionScreenPreview() {
     MaterialTheme {
         OptionSelectionScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DecisionScreenPreview() {
+    MaterialTheme {
+        DecisionScreen()
     }
 }
