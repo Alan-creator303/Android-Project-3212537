@@ -54,18 +54,20 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                val pagerState = rememberPagerState(pageCount = { 3 })
+                val pagerState = rememberPagerState(pageCount = { 5 })
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Page
                 ) {
-                    // Swipe left or right to look at the three screen layouts.
+                    // Swipe left or right to look at the five screen layouts.
                     HorizontalPager(state = pagerState) { page ->
                         when (page) {
                             0 -> StartScreen()
                             1 -> OptionSelectionScreen()
-                            else -> DecisionScreen()
+                            2 -> MethodChoiceScreen()
+                            3 -> DecisionScreen()
+                            else -> HistoryScreen()
                         }
                     }
                 }
@@ -275,6 +277,102 @@ private fun OptionChip(option: String) {
     )
 }
 
+// The third screen: the user chooses how the app should decide for them.
+// This page only comes after the user picked 3 to 5 options.
+@Composable
+private fun MethodChoiceScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("‹", modifier = Modifier.padding(horizontal = 10.dp), color = Purple, fontSize = 38.sp)
+            Text(
+                text = "Pick Your Decision Method",
+                modifier = Modifier.weight(1f),
+                color = Ink,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.width(42.dp))
+        }
+
+        Text(
+            text = "You have 3 options. Choose how to decide:",
+            modifier = Modifier.padding(start = 22.dp, end = 22.dp),
+            color = Muted,
+            fontSize = 13.sp
+        )
+
+        Column(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            MethodCard(
+                emoji = "🎡",
+                title = "Spinner Wheel",
+                description = "Spin a colorful wheel - great for 3+ options."
+            )
+            MethodCard(
+                emoji = "🎰",
+                title = "Slot Machine",
+                description = "Three reels roll and stop on your fate."
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 14.dp)
+                .height(54.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFD8D1E5),
+                contentColor = Color.White
+            )
+        ) {
+            Text("Confirm", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+// One choice card: icon on the left, name and one line of text on the right.
+@Composable
+private fun MethodCard(emoji: String, title: String, description: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(20.dp))
+            .background(Color.White, RoundedCornerShape(20.dp))
+            .padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(58.dp)
+                .background(Color(0xFFF3EEFE), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(emoji, fontSize = 30.sp)
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(description, color = Muted, fontSize = 12.sp)
+        }
+    }
+}
+
 
 @Composable
 private fun DecisionScreen() {
@@ -394,6 +492,130 @@ private fun OptionCard(emoji: String, name: String, modifier: Modifier = Modifie
     }
 }
 
+// The fourth screen: the decisions the user made before.
+// The three records below are sample data, real history comes later.
+@Composable
+private fun HistoryScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("‹", modifier = Modifier.padding(horizontal = 10.dp), color = Purple, fontSize = 38.sp)
+            Text(
+                text = "History",
+                modifier = Modifier.weight(1f),
+                color = Ink,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.width(42.dp))
+        }
+
+        LazyColumn(
+            modifier = Modifier.weight(1f).padding(horizontal = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            item {
+                HistoryCard(
+                    time = "2026-10-14   21:30",
+                    options = listOf("🏃 Running", "🏀 Basketball", "🏋️ Fitness"),
+                    result = "🏀 Basketball"
+                )
+            }
+            item {
+                HistoryCard(
+                    time = "2026-10-14   20:15",
+                    options = listOf("🍔 Burger", "🍟 Fries", "🥩 Steak", "🥤 Cola"),
+                    result = "🥩 Steak"
+                )
+            }
+            item {
+                HistoryCard(
+                    time = "2026-10-13   22:40",
+                    options = listOf("📚 Homework", "📖 Reading", "🎉 Party", "🛌 Rest"),
+                    result = "📖 Reading"
+                )
+            }
+        }
+
+        Button(
+            onClick = { },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 12.dp)
+                .height(52.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
+        ) {
+            Text("Clear All", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+// One record: when it happened, what the options were, and what the dice picked.
+@Composable
+private fun HistoryCard(time: String, options: List<String>, result: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White, RoundedCornerShape(18.dp))
+            .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(18.dp))
+            .padding(14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(time, color = Muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            Text("🗑", fontSize = 14.sp)
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            items(options) { option ->
+                Text(
+                    text = option,
+                    modifier = Modifier
+                        .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(10.dp))
+                        .background(Page, RoundedCornerShape(10.dp))
+                        .padding(horizontal = 8.dp, vertical = 5.dp),
+                    color = Ink,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Purple, RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("🎲", fontSize = 14.sp)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Result: $result",
+                color = Color.White,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
 @Composable
 private fun DiceIllustration() {
     Box(
@@ -432,8 +654,24 @@ private fun OptionSelectionScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
+private fun MethodChoiceScreenPreview() {
+    MaterialTheme {
+        MethodChoiceScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
 private fun DecisionScreenPreview() {
     MaterialTheme {
         DecisionScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HistoryScreenPreview() {
+    MaterialTheme {
+        HistoryScreen()
     }
 }
