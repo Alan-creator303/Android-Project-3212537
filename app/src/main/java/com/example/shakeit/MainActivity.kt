@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -29,17 +27,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,16 +58,23 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Page
                 ) {
-                    // Swipe left or right to look at the screen layouts.
-                    HorizontalPager(state = pagerState) { page ->
-                        when (page) {
-                            0 -> StartScreen()
-                            1 -> OptionSelectionScreen()
-                            2 -> CoinScreen()
-                            3 -> DecisionScreen()
-                            4 -> WheelScreen()
-                            5 -> SlotScreen()
-                            else -> HistoryScreen()
+                    // The Scaffold gives us the innerPadding, so our screens
+                    // stay below the status bar and above the navigation bar.
+                    Scaffold(containerColor = Page) { innerPadding ->
+                        // Swipe left or right to look at the screen layouts.
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.padding(innerPadding)
+                        ) { page ->
+                            when (page) {
+                                0 -> StartScreen()
+                                1 -> OptionSelectionScreen()
+                                2 -> CoinScreen()
+                                3 -> DecisionScreen()
+                                4 -> WheelScreen()
+                                5 -> SlotScreen()
+                                else -> HistoryScreen()
+                            }
                         }
                     }
                 }
@@ -85,8 +88,6 @@ private fun StartScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .padding(horizontal = 28.dp, vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -112,8 +113,7 @@ private fun StartScreen() {
             onClick = { },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(58.dp)
-                .shadow(10.dp, RoundedCornerShape(18.dp)),
+                .height(58.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Purple)
         ) {
@@ -139,8 +139,6 @@ private fun OptionSelectionScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
@@ -191,7 +189,7 @@ private fun OptionSelectionScreen() {
             }
         }
 
-        Surface(color = Color.White, shadowElevation = 8.dp) {
+        Surface(color = Color.White) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -243,17 +241,13 @@ private fun CustomOptionSection() {
         }
         Spacer(modifier = Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            TextField(
                 value = "",
                 onValueChange = { },
                 modifier = Modifier.weight(1f),
                 enabled = false,
                 singleLine = true,
-                label = { Text("Add your own option...") },
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences
-                ),
-                shape = RoundedCornerShape(14.dp)
+                label = { Text("Add your own option...") }
             )
             Spacer(modifier = Modifier.width(8.dp))
             Button(
@@ -288,8 +282,6 @@ private fun CoinScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -326,7 +318,6 @@ private fun CoinScreen() {
         Box(
             modifier = Modifier
                 .size(170.dp)
-                .shadow(12.dp, CircleShape)
                 .background(Color(0xFFFFC94D), CircleShape)
                 .border(6.dp, Color.White, CircleShape),
             contentAlignment = Alignment.Center
@@ -372,8 +363,6 @@ private fun DecisionScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -401,7 +390,6 @@ private fun DecisionScreen() {
         Box(
             modifier = Modifier
                 .size(120.dp)
-                .shadow(12.dp, RoundedCornerShape(28.dp))
                 .background(Color.White, RoundedCornerShape(28.dp)),
             contentAlignment = Alignment.Center
         ) {
@@ -499,8 +487,6 @@ private fun WheelScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -590,8 +576,9 @@ private fun WheelDrawing() {
             )
         }
         // A small white circle in the middle, like the pin of the wheel.
-        drawCircle(color = Color.White, radius = size.minDimension / 8f)
-        drawCircle(color = Purple, radius = size.minDimension / 8f, style = Stroke(width = 8f))
+        // A purple circle with a white circle inside, so it looks like a wheel pin.
+        drawCircle(color = Purple, radius = size.minDimension / 8f)
+        drawCircle(color = Color.White, radius = size.minDimension / 11f)
     }
 }
 
@@ -601,8 +588,6 @@ private fun SlotScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -694,8 +679,6 @@ private fun HistoryScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .statusBarsPadding()
-            .navigationBarsPadding()
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
@@ -822,7 +805,6 @@ private fun DiceIllustration() {
         Box(
             modifier = Modifier
                 .size(150.dp)
-                .shadow(12.dp, RoundedCornerShape(28.dp))
                 .background(Color.White, RoundedCornerShape(28.dp)),
             contentAlignment = Alignment.Center
         ) {
