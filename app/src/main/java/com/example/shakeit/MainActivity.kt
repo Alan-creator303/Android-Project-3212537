@@ -1,5 +1,6 @@
 package com.example.shakeit
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,8 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -36,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,12 +45,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 
 private val Purple = Color(0xFF8B5CF6)
 private val Ink = Color(0xFF211A2E)
 private val Muted = Color(0xFF777183)
 private val Page = Color(0xFFF8F6FC)
+private val Line = Color(0xFFE5E1EB)
+private val SoftPurple = Color(0xFFF3EEFE)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,20 +59,18 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                val pagerState = rememberPagerState(pageCount = { 3 })
-                val scope = rememberCoroutineScope()
                 val context = LocalContext.current
 
-                // The options the user picked, the options the user typed in,
-                // and the text that is currently inside the text field.
+                // Which screen is on screen right now. The buttons change it,
+                // so there is no swiping between the screens.
+                var screen by remember { mutableStateOf("start") }
+
+                // What the user has picked, what they typed in, and which
+                // method they picked on the method screen ("Wheel" or "Slot").
                 var selectedOptions by remember { mutableStateOf(listOf<String>()) }
                 var customOptions by remember { mutableStateOf(listOf<String>()) }
                 var customText by remember { mutableStateOf("") }
-
-                // Move the pager to another page, for example when a button is pressed.
-                fun goToPage(page: Int) {
-                    scope.launch { pagerState.animateScrollToPage(page) }
-                }
+                var method by remember { mutableStateOf("") }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -82,17 +79,9 @@ class MainActivity : ComponentActivity() {
                     // The Scaffold gives us the innerPadding, so our screens
                     // stay below the status bar and above the navigation bar.
                     Scaffold(containerColor = Page) { innerPadding ->
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier.padding(innerPadding)
-                        ) { page ->
-                            when (page) {
-                                0 -> StartScreen(
-                                    onStart = { goToPage(1) },
-                                    onHistory = { goToPage(2) }
-                                )
-
-                                1 -> OptionSelectionScreen(
+                        Box(modifier = Modifier.padding(innerPadding)) {
+                            when (screen) {
+                                "options" -> OptionSelectionScreen(
                                     selectedOptions = selectedOptions,
                                     customOptions = customOptions,
                                     customText = customText,
@@ -106,19 +95,39 @@ class MainActivity : ComponentActivity() {
                                             customText = ""
                                         }
                                     },
+                                    onBack = { screen = "start" },
                                     onNext = {
-                                        // Explicit intent: we name the activity we want to open,
-                                        // and we send the selected options inside the intent.
-                                        val intent = Intent(context, DecisionActivity::class.java)
-                                        intent.putStringArrayListExtra(
-                                            DecisionActivity.EXTRA_OPTIONS,
-                                            ArrayList(selectedOptions)
-                                        )
-                                        context.startActivity(intent)
+                                        // Two options go straight to the coin, six options go
+                                        // straight to the dice. Any other number opens the
+                                        // screen where the user picks the wheel or the slot.
+                                        when (selectedOptions.size) {
+                                            2 -> openDecision(context, selectedOptions, 0)
+                                            6 -> openDecision(context, selectedOptions, 1)
+                                            else -> screen = "method"
+                                        }
                                     }
                                 )
 
-                                else -> HistoryScreen()
+                                "method" -> MethodChoiceScreen(
+                                    optionCount = selectedOptions.size,
+                                    selectedMethod = method,
+                                    onSelect = { method = it },
+                                    onBack = { screen = "options" },
+                                    onStart = {
+                                        if (method == "Wheel") {
+                                            openDecision(context, selectedOptions, 2)
+                                        } else if (method == "Slot") {
+                                            openDecision(context, selectedOptions, 3)
+                                        }
+                                    }
+                                )
+
+                                "history" -> HistoryScreen(onBack = { screen = "start" })
+
+                                else -> StartScreen(
+                                    onStart = { screen = "options" },
+                                    onHistory = { screen = "history" }
+                                )
                             }
                         }
                     }
@@ -126,6 +135,15 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+// Opens the decision screen with an explicit intent. The options and the page
+// that should be shown (0 coin, 1 dice, 2 wheel, 3 slot) go in the intent.
+private fun openDecision(context: Context, options: List<String>, startPage: Int) {
+    val intent = Intent(context, DecisionActivity::class.java)
+    intent.putStringArrayListExtra(DecisionActivity.EXTRA_OPTIONS, ArrayList(options))
+    intent.putExtra(DecisionActivity.EXTRA_START_PAGE, startPage)
+    context.startActivity(intent)
 }
 
 @Composable
@@ -180,6 +198,33 @@ private fun StartScreen(onStart: () -> Unit, onHistory: () -> Unit) {
 }
 
 @Composable
+private fun ScreenTopBar(title: String, onBack: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "‹",
+            modifier = Modifier
+                .clickable { onBack() }
+                .padding(horizontal = 10.dp),
+            color = Purple,
+            fontSize = 38.sp
+        )
+        Text(
+            text = title,
+            modifier = Modifier.weight(1f),
+            color = Ink,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        // An empty space so the title stays in the middle.
+        Spacer(modifier = Modifier.width(42.dp))
+    }
+}
+
+@Composable
 private fun OptionSelectionScreen(
     selectedOptions: List<String>,
     customOptions: List<String>,
@@ -187,27 +232,14 @@ private fun OptionSelectionScreen(
     onToggle: (String) -> Unit,
     onCustomTextChange: (String) -> Unit,
     onAddCustom: () -> Unit,
+    onBack: () -> Unit,
     onNext: () -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("‹", modifier = Modifier.padding(horizontal = 10.dp), color = Purple, fontSize = 38.sp)
-            Text(
-                text = "Select Options",
-                modifier = Modifier.weight(1f),
-                color = Ink,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.width(42.dp))
-        }
+        ScreenTopBar(title = "Select Options", onBack = onBack)
 
         Text(
             text = "Choose at least 2 options",
@@ -277,6 +309,12 @@ private fun OptionSelectionScreen(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
+
+                // With 2 options the app can go straight to the coin, and with 6
+                // straight to the dice. For any other number the button becomes
+                // Next, because the user still has to pick a method.
+                val goesStraight = selectedOptions.size == 2 || selectedOptions.size == 6
+
                 Button(
                     onClick = onNext,
                     modifier = Modifier.fillMaxWidth().height(54.dp),
@@ -288,7 +326,11 @@ private fun OptionSelectionScreen(
                         disabledContainerColor = Color(0xFFD8D1E5)
                     )
                 ) {
-                    Text("Next", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (goesStraight) "Start" else "Next",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -373,11 +415,11 @@ private fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit)
         modifier = Modifier
             .border(
                 width = 1.dp,
-                color = if (isSelected) Purple else Color(0xFFE5E1EB),
+                color = if (isSelected) Purple else Line,
                 shape = RoundedCornerShape(16.dp)
             )
             .background(
-                color = if (isSelected) Color(0xFFF3EEFE) else Color.White,
+                color = if (isSelected) SoftPurple else Color.White,
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable { onClick() }
@@ -397,29 +439,116 @@ private fun toggleOption(options: List<String>, option: String): List<String> {
     }
 }
 
-// The history screen. It is empty for now: the saved decisions come later.
 @Composable
-private fun HistoryScreen() {
+private fun MethodChoiceScreen(
+    optionCount: Int,
+    selectedMethod: String,
+    onSelect: (String) -> Unit,
+    onBack: () -> Unit,
+    onStart: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
+        ScreenTopBar(title = "Pick Your Decision Method", onBack = onBack)
+
+        Text(
+            text = "You have $optionCount options. Choose how to decide:",
+            modifier = Modifier.padding(start = 22.dp, end = 22.dp),
+            color = Muted,
+            fontSize = 13.sp
+        )
+
+        Column(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("‹", modifier = Modifier.padding(horizontal = 10.dp), color = Purple, fontSize = 38.sp)
-            Text(
-                text = "History",
-                modifier = Modifier.weight(1f),
-                color = Ink,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+            MethodCard(
+                emoji = "🎡",
+                title = "Spinner Wheel",
+                description = "Spin a colorful wheel - great for 3+ options.",
+                isSelected = selectedMethod == "Wheel",
+                onClick = { onSelect("Wheel") }
             )
-            // The button that will delete the whole history.
-            Text("🗑", modifier = Modifier.padding(horizontal = 10.dp), fontSize = 20.sp)
+            MethodCard(
+                emoji = "🎰",
+                title = "Slot Machine",
+                description = "Three reels roll and stop on your fate.",
+                isSelected = selectedMethod == "Slot",
+                onClick = { onSelect("Slot") }
+            )
         }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = onStart,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 14.dp)
+                .height(54.dp),
+            enabled = selectedMethod.isNotEmpty(),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Purple,
+                disabledContainerColor = Color(0xFFD8D1E5)
+            )
+        ) {
+            Text("Start", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+private fun MethodCard(
+    emoji: String,
+    title: String,
+    description: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) Purple else Line,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .background(
+                color = if (isSelected) SoftPurple else Color.White,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clickable { onClick() }
+            .padding(20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(58.dp)
+                .background(SoftPurple, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(emoji, fontSize = 30.sp)
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column {
+            Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(description, color = Muted, fontSize = 12.sp)
+        }
+    }
+}
+
+// The history screen. It is empty for now: the saved decisions come later.
+@Composable
+private fun HistoryScreen(onBack: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        ScreenTopBar(title = "History", onBack = onBack)
 
         // There is nothing to show yet, so the rest of the screen is empty.
         Spacer(modifier = Modifier.weight(1f))
@@ -465,7 +594,22 @@ private fun OptionSelectionScreenPreview() {
             onToggle = { },
             onCustomTextChange = { },
             onAddCustom = { },
+            onBack = { },
             onNext = { }
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MethodChoiceScreenPreview() {
+    MaterialTheme {
+        MethodChoiceScreen(
+            optionCount = 3,
+            selectedMethod = "Wheel",
+            onSelect = { },
+            onBack = { },
+            onStart = { }
         )
     }
 }

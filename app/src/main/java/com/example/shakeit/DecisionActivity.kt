@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,8 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -60,8 +59,10 @@ class DecisionActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Read the list of options that the previous screen sent us.
+        // Read the list of options that the previous screen sent us, and which
+        // page should be shown first (0 coin, 1 dice, 2 wheel, 3 slot).
         val options: List<String> = intent.getStringArrayListExtra(EXTRA_OPTIONS) ?: emptyList()
+        val startPage = intent.getIntExtra(EXTRA_START_PAGE, 0)
 
         setContent {
             MaterialTheme {
@@ -69,21 +70,21 @@ class DecisionActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Page
                 ) {
-                    DecisionScreens(options)
+                    DecisionScreens(options, startPage, onBack = { finish() })
                 }
             }
         }
     }
 
     companion object {
-        // The name we use to put the options inside the intent.
+        // The names we use to put the options and the start page inside the intent.
         const val EXTRA_OPTIONS = "extra_options"
+        const val EXTRA_START_PAGE = "extra_start_page"
     }
 }
 
 @Composable
-private fun DecisionScreens(options: List<String>) {
-    val pagerState = rememberPagerState(pageCount = { 4 })
+private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () -> Unit) {
     val context = LocalContext.current
 
     // The option the app picked. It stays empty until a button is pressed,
@@ -110,15 +111,13 @@ private fun DecisionScreens(options: List<String>) {
     }
 
     Scaffold(containerColor = Page) { innerPadding ->
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.padding(innerPadding)
-        ) { page ->
-            when (page) {
-                0 -> CoinScreen(options, result, onPick = { pickOption() }, onShare = { shareResult() })
-                1 -> DiceScreen(options, result, onPick = { pickOption() }, onShare = { shareResult() })
-                2 -> WheelScreen(options, result, onPick = { pickOption() }, onShare = { shareResult() })
-                else -> SlotScreen(options, result, onPick = { pickOption() }, onShare = { shareResult() })
+        // Only one decision screen is shown, the one the user picked before.
+        Box(modifier = Modifier.padding(innerPadding)) {
+            when (startPage) {
+                0 -> CoinScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
+                1 -> DiceScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
+                2 -> WheelScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
+                else -> SlotScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
             }
         }
     }
@@ -128,6 +127,7 @@ private fun DecisionScreens(options: List<String>) {
 private fun CoinScreen(
     options: List<String>,
     result: String,
+    onBack: () -> Unit,
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
@@ -137,7 +137,7 @@ private fun CoinScreen(
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBar("Coin Flip")
+        TopBar("Coin Flip", onBack)
 
         Spacer(modifier = Modifier.height(26.dp))
 
@@ -194,6 +194,7 @@ private fun CoinScreen(
 private fun DiceScreen(
     options: List<String>,
     result: String,
+    onBack: () -> Unit,
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
@@ -203,7 +204,7 @@ private fun DiceScreen(
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBar("Dice Roll")
+        TopBar("Dice Roll", onBack)
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -244,6 +245,7 @@ private fun DiceScreen(
 private fun WheelScreen(
     options: List<String>,
     result: String,
+    onBack: () -> Unit,
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
@@ -253,7 +255,7 @@ private fun WheelScreen(
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBar("Spinner Wheel")
+        TopBar("Spinner Wheel", onBack)
 
         Spacer(modifier = Modifier.height(18.dp))
 
@@ -289,6 +291,7 @@ private fun WheelScreen(
 private fun SlotScreen(
     options: List<String>,
     result: String,
+    onBack: () -> Unit,
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
@@ -298,7 +301,7 @@ private fun SlotScreen(
             .padding(horizontal = 22.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBar("Slot Machine")
+        TopBar("Slot Machine", onBack)
 
         Spacer(modifier = Modifier.height(26.dp))
 
@@ -341,12 +344,19 @@ private fun SlotScreen(
 }
 
 @Composable
-private fun TopBar(title: String) {
+private fun TopBar(title: String, onBack: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("‹", modifier = Modifier.padding(horizontal = 6.dp), color = Purple, fontSize = 34.sp)
+        Text(
+            text = "‹",
+            modifier = Modifier
+                .clickable { onBack() }
+                .padding(horizontal = 6.dp),
+            color = Purple,
+            fontSize = 34.sp
+        )
         Text(
             text = title,
             modifier = Modifier.weight(1f),
@@ -500,6 +510,7 @@ private fun CoinScreenPreview() {
             CoinScreen(
                 options = listOf("🍕 Pizza", "🍔 Burger"),
                 result = "🍕 Pizza",
+                onBack = { },
                 onPick = { },
                 onShare = { }
             )
@@ -515,6 +526,7 @@ private fun DiceScreenPreview() {
             DiceScreen(
                 options = listOf("🍕 Pizza", "🍔 Burger", "🥩 Steak"),
                 result = "",
+                onBack = { },
                 onPick = { },
                 onShare = { }
             )
