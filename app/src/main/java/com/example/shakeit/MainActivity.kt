@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 
 private val Purple = Color(0xFF8B5CF6)
 private val Ink = Color(0xFF211A2E)
@@ -53,6 +60,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val pagerState = rememberPagerState(pageCount = { 7 })
+                val scope = rememberCoroutineScope()
+
+                // The options the user picked, the options the user typed in,
+                // and the text that is currently inside the text field.
+                var selectedOptions by remember { mutableStateOf(listOf<String>()) }
+                var customOptions by remember { mutableStateOf(listOf<String>()) }
+                var customText by remember { mutableStateOf("") }
+
+                // Move the pager to another page, for example when a button is pressed.
+                fun goToPage(page: Int) {
+                    scope.launch { pagerState.animateScrollToPage(page) }
+                }
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -61,14 +80,33 @@ class MainActivity : ComponentActivity() {
                     // The Scaffold gives us the innerPadding, so our screens
                     // stay below the status bar and above the navigation bar.
                     Scaffold(containerColor = Page) { innerPadding ->
-                        // Swipe left or right to look at the screen layouts.
                         HorizontalPager(
                             state = pagerState,
                             modifier = Modifier.padding(innerPadding)
                         ) { page ->
                             when (page) {
-                                0 -> StartScreen()
-                                1 -> OptionSelectionScreen()
+                                0 -> StartScreen(
+                                    onStart = { goToPage(1) },
+                                    onHistory = { goToPage(6) }
+                                )
+
+                                1 -> OptionSelectionScreen(
+                                    selectedOptions = selectedOptions,
+                                    customOptions = customOptions,
+                                    customText = customText,
+                                    onToggle = { option ->
+                                        selectedOptions = toggleOption(selectedOptions, option)
+                                    },
+                                    onCustomTextChange = { customText = it },
+                                    onAddCustom = {
+                                        if (customText.isNotBlank()) {
+                                            customOptions = customOptions + customText.trim()
+                                            customText = ""
+                                        }
+                                    },
+                                    onNext = { goToPage(2) }
+                                )
+
                                 2 -> CoinScreen()
                                 3 -> DecisionScreen()
                                 4 -> WheelScreen()
@@ -84,7 +122,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun StartScreen() {
+private fun StartScreen(onStart: () -> Unit, onHistory: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -110,7 +148,7 @@ private fun StartScreen() {
         Spacer(modifier = Modifier.height(48.dp))
 
         Button(
-            onClick = { },
+            onClick = onStart,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(58.dp),
@@ -121,7 +159,7 @@ private fun StartScreen() {
         }
         Spacer(modifier = Modifier.height(14.dp))
         Button(
-            onClick = { },
+            onClick = onHistory,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
@@ -135,7 +173,15 @@ private fun StartScreen() {
 }
 
 @Composable
-private fun OptionSelectionScreen() {
+private fun OptionSelectionScreen(
+    selectedOptions: List<String>,
+    customOptions: List<String>,
+    customText: String,
+    onToggle: (String) -> Unit,
+    onCustomTextChange: (String) -> Unit,
+    onAddCustom: () -> Unit,
+    onNext: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -168,24 +214,46 @@ private fun OptionSelectionScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                OptionCategory("Sports", listOf(
-                    "🏃 Running", "🏀 Basketball", "⚽ Soccer", "🏋️ Fitness",
-                    "🏊 Swimming", "🏸 Badminton", "🚴 Cycling", "🎾 Tennis", "🏓 Table Tennis"
-                ))
+                OptionCategory(
+                    title = "Sports",
+                    options = listOf(
+                        "🏃 Running", "🏀 Basketball", "⚽ Soccer", "🏋️ Fitness",
+                        "🏊 Swimming", "🏸 Badminton", "🚴 Cycling", "🎾 Tennis", "🏓 Table Tennis"
+                    ),
+                    selectedOptions = selectedOptions,
+                    onToggle = onToggle
+                )
             }
             item {
-                OptionCategory("Food", listOf(
-                    "🍔 Burger", "🍟 Fries", "🥩 Steak", "🥤 Cola",
-                    "🥪 Sandwich", "🍕 Pizza", "🍜 Noodles", "🧃 Juice"
-                ))
+                OptionCategory(
+                    title = "Food",
+                    options = listOf(
+                        "🍔 Burger", "🍟 Fries", "🥩 Steak", "🥤 Cola",
+                        "🥪 Sandwich", "🍕 Pizza", "🍜 Noodles", "🧃 Juice"
+                    ),
+                    selectedOptions = selectedOptions,
+                    onToggle = onToggle
+                )
             }
             item {
-                OptionCategory("Daily Tasks", listOf(
-                    "📚 Homework", "📖 Reading", "🎉 Party", "🛌 Rest"
-                ))
+                OptionCategory(
+                    title = "Daily Tasks",
+                    options = listOf(
+                        "📚 Homework", "📖 Reading", "🎉 Party", "🛌 Rest"
+                    ),
+                    selectedOptions = selectedOptions,
+                    onToggle = onToggle
+                )
             }
             item {
-                CustomOptionSection()
+                CustomOptionSection(
+                    customOptions = customOptions,
+                    selectedOptions = selectedOptions,
+                    customText = customText,
+                    onToggle = onToggle,
+                    onCustomTextChange = onCustomTextChange,
+                    onAddCustom = onAddCustom
+                )
             }
         }
 
@@ -196,15 +264,17 @@ private fun OptionSelectionScreen() {
                     .padding(horizontal = 18.dp, vertical = 12.dp)
             ) {
                 Text(
-                    text = "Selected: 0",
+                    text = "Selected: ${selectedOptions.size}",
                     modifier = Modifier.padding(bottom = 10.dp),
                     color = Ink,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Button(
-                    onClick = { },
+                    onClick = onNext,
                     modifier = Modifier.fillMaxWidth().height(54.dp),
+                    // The button only works when at least 2 options are selected.
+                    enabled = selectedOptions.size >= 2,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Purple,
@@ -219,20 +289,36 @@ private fun OptionSelectionScreen() {
 }
 
 @Composable
-private fun OptionCategory(title: String, options: List<String>) {
+private fun OptionCategory(
+    title: String,
+    options: List<String>,
+    selectedOptions: List<String>,
+    onToggle: (String) -> Unit
+) {
     Column(modifier = Modifier.padding(horizontal = 18.dp)) {
         Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(10.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(options) { option ->
-                OptionChip(option)
+                OptionChip(
+                    option = option,
+                    isSelected = selectedOptions.contains(option),
+                    onClick = { onToggle(option) }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CustomOptionSection() {
+private fun CustomOptionSection(
+    customOptions: List<String>,
+    selectedOptions: List<String>,
+    customText: String,
+    onToggle: (String) -> Unit,
+    onCustomTextChange: (String) -> Unit,
+    onAddCustom: () -> Unit
+) {
     Column(modifier = Modifier.padding(horizontal = 18.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Custom", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
@@ -240,18 +326,30 @@ private fun CustomOptionSection() {
             Text("add your own idea", color = Purple, fontSize = 12.sp)
         }
         Spacer(modifier = Modifier.height(10.dp))
+
+        // The options the user added. They can be picked like the other ones.
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(customOptions) { option ->
+                OptionChip(
+                    option = option,
+                    isSelected = selectedOptions.contains(option),
+                    onClick = { onToggle(option) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextField(
-                value = "",
-                onValueChange = { },
+                value = customText,
+                onValueChange = onCustomTextChange,
                 modifier = Modifier.weight(1f),
-                enabled = false,
                 singleLine = true,
                 label = { Text("Add your own option...") }
             )
             Spacer(modifier = Modifier.width(8.dp))
             Button(
-                onClick = { },
+                onClick = onAddCustom,
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Purple)
             ) {
@@ -262,17 +360,34 @@ private fun CustomOptionSection() {
 }
 
 @Composable
-private fun OptionChip(option: String) {
+private fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit) {
     Text(
         text = option,
         modifier = Modifier
-            .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(16.dp))
-            .background(Color.White, RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = if (isSelected) Purple else Color(0xFFE5E1EB),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .background(
+                color = if (isSelected) Color(0xFFF3EEFE) else Color.White,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        color = Ink,
+        color = if (isSelected) Purple else Ink,
         fontSize = 13.sp,
-        fontWeight = FontWeight.Medium
+        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
     )
+}
+
+// Adds the option to the list, or takes it out when it is already in the list.
+private fun toggleOption(options: List<String>, option: String): List<String> {
+    return if (options.contains(option)) {
+        options - option
+    } else {
+        options + option
+    }
 }
 
 // The third screen: the coin flip. It is used when the user picks
@@ -672,8 +787,7 @@ private fun SlotReel(emoji: String, name: String, modifier: Modifier = Modifier)
     }
 }
 
-// The fourth screen: the decisions the user made before.
-// The three records below are sample data, real history comes later.
+// The history screen. It is empty for now: the saved decisions come later.
 @Composable
 private fun HistoryScreen() {
     Column(
@@ -693,107 +807,16 @@ private fun HistoryScreen() {
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.width(42.dp))
+            // The button that will delete the whole history.
+            Text("🗑", modifier = Modifier.padding(horizontal = 10.dp), fontSize = 20.sp)
         }
 
-        LazyColumn(
-            modifier = Modifier.weight(1f).padding(horizontal = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            item {
-                HistoryCard(
-                    time = "2026-10-14   21:30",
-                    options = listOf("🏃 Running", "🏀 Basketball", "🏋️ Fitness"),
-                    result = "🏀 Basketball"
-                )
-            }
-            item {
-                HistoryCard(
-                    time = "2026-10-14   20:15",
-                    options = listOf("🍔 Burger", "🍟 Fries", "🥩 Steak", "🥤 Cola"),
-                    result = "🥩 Steak"
-                )
-            }
-            item {
-                HistoryCard(
-                    time = "2026-10-13   22:40",
-                    options = listOf("📚 Homework", "📖 Reading", "🎉 Party", "🛌 Rest"),
-                    result = "📖 Reading"
-                )
-            }
-        }
-
-        Button(
-            onClick = { },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 12.dp)
-                .height(52.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
-        ) {
-            Text("Clear All", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
+        // There is nothing to show yet, so the rest of the screen is empty.
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
-// One record: when it happened, what the options were, and what the dice picked.
-@Composable
-private fun HistoryCard(time: String, options: List<String>, result: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(18.dp))
-            .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(18.dp))
-            .padding(14.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(time, color = Muted, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-            Text("🗑", fontSize = 14.sp)
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            items(options) { option ->
-                Text(
-                    text = option,
-                    modifier = Modifier
-                        .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(10.dp))
-                        .background(Page, RoundedCornerShape(10.dp))
-                        .padding(horizontal = 8.dp, vertical = 5.dp),
-                    color = Ink,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Purple, RoundedCornerShape(12.dp))
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("🎲", fontSize = 14.sp)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Result: $result",
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
+// The big dice on the start screen.
 @Composable
 private fun DiceIllustration() {
     Box(
@@ -817,7 +840,7 @@ private fun DiceIllustration() {
 @Composable
 private fun StartScreenPreview() {
     MaterialTheme {
-        StartScreen()
+        StartScreen(onStart = { }, onHistory = { })
     }
 }
 
@@ -825,7 +848,15 @@ private fun StartScreenPreview() {
 @Composable
 private fun OptionSelectionScreenPreview() {
     MaterialTheme {
-        OptionSelectionScreen()
+        OptionSelectionScreen(
+            selectedOptions = listOf("🍕 Pizza"),
+            customOptions = listOf("Watch a film"),
+            customText = "",
+            onToggle = { },
+            onCustomTextChange = { },
+            onAddCustom = { },
+            onNext = { }
+        )
     }
 }
 
