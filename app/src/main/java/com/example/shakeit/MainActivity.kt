@@ -3,6 +3,7 @@ package com.example.shakeit
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
@@ -54,19 +56,21 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                val pagerState = rememberPagerState(pageCount = { 5 })
+                val pagerState = rememberPagerState(pageCount = { 7 })
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Page
                 ) {
-                    // Swipe left or right to look at the five screen layouts.
+                    // Swipe left or right to look at the screen layouts.
                     HorizontalPager(state = pagerState) { page ->
                         when (page) {
                             0 -> StartScreen()
                             1 -> OptionSelectionScreen()
-                            2 -> MethodChoiceScreen()
+                            2 -> CoinScreen()
                             3 -> DecisionScreen()
+                            4 -> WheelScreen()
+                            5 -> SlotScreen()
                             else -> HistoryScreen()
                         }
                     }
@@ -277,98 +281,87 @@ private fun OptionChip(option: String) {
     )
 }
 
-// The third screen: the user chooses how the app should decide for them.
-// This page only comes after the user picked 3 to 5 options.
+// The third screen: the coin flip. It is used when the user picks
+// only two options, so the coin has two sides.
 @Composable
-private fun MethodChoiceScreen() {
+private fun CoinScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
             .navigationBarsPadding()
+            .padding(horizontal = 22.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("‹", modifier = Modifier.padding(horizontal = 10.dp), color = Purple, fontSize = 38.sp)
+            Text("‹", modifier = Modifier.padding(horizontal = 6.dp), color = Purple, fontSize = 34.sp)
             Text(
-                text = "Pick Your Decision Method",
+                text = "Coin Flip",
                 modifier = Modifier.weight(1f),
                 color = Ink,
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.width(42.dp))
+            Spacer(modifier = Modifier.width(28.dp))
         }
 
-        Text(
-            text = "You have 3 options. Choose how to decide:",
-            modifier = Modifier.padding(start = 22.dp, end = 22.dp),
-            color = Muted,
-            fontSize = 13.sp
-        )
+        Spacer(modifier = Modifier.height(26.dp))
 
-        Column(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        // The two options, one for each side of the coin.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            MethodCard(
-                emoji = "🎡",
-                title = "Spinner Wheel",
-                description = "Spin a colorful wheel - great for 3+ options."
-            )
-            MethodCard(
-                emoji = "🎰",
-                title = "Slot Machine",
-                description = "Three reels roll and stop on your fate."
-            )
+            OptionCard("🍕", "Pizza", Modifier.weight(1f))
+            OptionCard("🍔", "Burger", Modifier.weight(1f))
         }
+
+        Spacer(modifier = Modifier.height(34.dp))
+
+        // The coin: a big yellow circle with the side it lands on.
+        Box(
+            modifier = Modifier
+                .size(170.dp)
+                .shadow(12.dp, CircleShape)
+                .background(Color(0xFFFFC94D), CircleShape)
+                .border(6.dp, Color.White, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("🍕", fontSize = 52.sp)
+                Text("Pizza", color = Ink, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
+        DecisionResult(emoji = "🪙", value = "Pizza")
 
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
             onClick = { },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 14.dp)
-                .height(54.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple)
+        ) {
+            Text("Flip", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFD8D1E5),
-                contentColor = Color.White
+                containerColor = Color.White,
+                contentColor = Purple
             )
         ) {
-            Text("Confirm", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-// One choice card: icon on the left, name and one line of text on the right.
-@Composable
-private fun MethodCard(emoji: String, title: String, description: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Color(0xFFE5E1EB), RoundedCornerShape(20.dp))
-            .background(Color.White, RoundedCornerShape(20.dp))
-            .padding(20.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(58.dp)
-                .background(Color(0xFFF3EEFE), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(emoji, fontSize = 30.sp)
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(description, color = Muted, fontSize = 12.sp)
+            Text("Share Result", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -390,7 +383,7 @@ private fun DecisionScreen() {
         ) {
             Text("‹", modifier = Modifier.padding(horizontal = 6.dp), color = Purple, fontSize = 34.sp)
             Text(
-                text = "Decision",
+                text = "Dice Roll",
                 modifier = Modifier.weight(1f),
                 color = Ink,
                 fontSize = 20.sp,
@@ -430,27 +423,7 @@ private fun DecisionScreen() {
         Spacer(modifier = Modifier.height(22.dp))
 
         // The purple box that will show the result.
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Purple, RoundedCornerShape(22.dp))
-                .padding(vertical = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "🎲 RESULT",
-                color = Color.White.copy(alpha = 0.75f),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "Pizza",
-                color = Color.White,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
+        DecisionResult(emoji = "🎲", value = "Pizza")
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -489,6 +462,228 @@ private fun OptionCard(emoji: String, name: String, modifier: Modifier = Modifie
         Text(emoji, fontSize = 24.sp)
         Spacer(modifier = Modifier.height(6.dp))
         Text(name, color = Ink, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+// The purple box that shows what the app picked. All three decision
+// screens use it, only the emoji and the value change.
+@Composable
+private fun DecisionResult(emoji: String, value: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Purple, RoundedCornerShape(22.dp))
+            .padding(vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "$emoji RESULT",
+            color = Color.White.copy(alpha = 0.75f),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = value,
+            color = Color.White,
+            fontSize = 26.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+    }
+}
+
+// The spinner wheel screen. Same idea as the dice screen, but the
+// "random thing" in the middle is a colorful wheel.
+@Composable
+private fun WheelScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 22.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("‹", modifier = Modifier.padding(horizontal = 6.dp), color = Purple, fontSize = 34.sp)
+            Text(
+                text = "Spinner Wheel",
+                modifier = Modifier.weight(1f),
+                color = Ink,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.width(28.dp))
+        }
+
+        Spacer(modifier = Modifier.height(18.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OptionCard("🍕", "Pizza", Modifier.weight(1f))
+            OptionCard("🍔", "Burger", Modifier.weight(1f))
+            OptionCard("🥩", "Steak", Modifier.weight(1f))
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // The little arrow that points at the slice the wheel stops on.
+        Text("▼", color = Purple, fontSize = 18.sp)
+
+        WheelDrawing()
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        DecisionResult(emoji = "🎡", value = "Pizza")
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple)
+        ) {
+            Text("Spin", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,
+                contentColor = Purple
+            )
+        ) {
+            Text("Share Result", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+// The wheel itself: 6 colored slices, drawn with Canvas.
+@Composable
+private fun WheelDrawing() {
+    val sliceColors = listOf(
+        Color(0xFF8B5CF6),
+        Color(0xFFF472B6),
+        Color(0xFF34D399),
+        Color(0xFFFBBF24),
+        Color(0xFF60A5FA),
+        Color(0xFFFB7185)
+    )
+
+    Canvas(modifier = Modifier.size(210.dp)) {
+        val slice = 360f / sliceColors.size
+        sliceColors.forEachIndexed { index, color ->
+            drawArc(
+                color = color,
+                startAngle = index * slice,
+                sweepAngle = slice,
+                useCenter = true
+            )
+        }
+        // A small white circle in the middle, like the pin of the wheel.
+        drawCircle(color = Color.White, radius = size.minDimension / 8f)
+        drawCircle(color = Purple, radius = size.minDimension / 8f, style = Stroke(width = 8f))
+    }
+}
+
+// The slot machine screen: three reels inside a dark box.
+@Composable
+private fun SlotScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 22.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("‹", modifier = Modifier.padding(horizontal = 6.dp), color = Purple, fontSize = 34.sp)
+            Text(
+                text = "Slot Machine",
+                modifier = Modifier.weight(1f),
+                color = Ink,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.width(28.dp))
+        }
+
+        Spacer(modifier = Modifier.height(26.dp))
+
+        // The machine: a dark box with the three reels inside,
+        // and two red lines like the lines of a real slot machine.
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF1F2937), RoundedCornerShape(22.dp))
+                .padding(16.dp)
+        ) {
+            Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(Color(0xFFEF4444)))
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                SlotReel("🍕", "Pizza", Modifier.weight(1f))
+                SlotReel("🍔", "Burger", Modifier.weight(1f))
+                SlotReel("🥩", "Steak", Modifier.weight(1f))
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(Color(0xFFEF4444)))
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        DecisionResult(emoji = "🎰", value = "Pizza")
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Purple)
+        ) {
+            Text("Go", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Button(
+            onClick = { },
+            modifier = Modifier.fillMaxWidth().height(52.dp),
+            shape = RoundedCornerShape(18.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,
+                contentColor = Purple
+            )
+        ) {
+            Text("Share Result", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+// One reel of the slot machine: a white box with an emoji and a name.
+@Composable
+private fun SlotReel(emoji: String, name: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .background(Color.White, RoundedCornerShape(14.dp))
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(emoji, fontSize = 30.sp)
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(name, color = Ink, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -654,9 +849,9 @@ private fun OptionSelectionScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun MethodChoiceScreenPreview() {
+private fun CoinScreenPreview() {
     MaterialTheme {
-        MethodChoiceScreen()
+        CoinScreen()
     }
 }
 
@@ -665,6 +860,22 @@ private fun MethodChoiceScreenPreview() {
 private fun DecisionScreenPreview() {
     MaterialTheme {
         DecisionScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WheelScreenPreview() {
+    MaterialTheme {
+        WheelScreen()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SlotScreenPreview() {
+    MaterialTheme {
+        SlotScreen()
     }
 }
 
