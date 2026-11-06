@@ -1,6 +1,8 @@
 package com.example.shakeit
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -23,12 +25,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,16 +48,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Same colours as MainActivity.
 private val Purple = Color(0xFF8B5CF6)
 private val Ink = Color(0xFF211A2E)
 private val Muted = Color(0xFF777183)
 private val Page = Color(0xFFF8F6FC)
 private val Line = Color(0xFFE5E1EB)
 
-// This activity shows the four ways of deciding. It is opened from the
-// Select Options screen with an explicit intent, and the options the user
-// picked arrive inside that intent.
+
 class DecisionActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,7 +78,7 @@ class DecisionActivity : ComponentActivity() {
     }
 
     companion object {
-        // The names we use to put the options and the start page inside the intent.
+
         const val EXTRA_OPTIONS = "extra_options"
         const val EXTRA_START_PAGE = "extra_start_page"
     }
@@ -87,9 +88,9 @@ class DecisionActivity : ComponentActivity() {
 private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () -> Unit) {
     val context = LocalContext.current
 
-    // The option the app picked. It stays empty until a button is pressed,
-    // and it is shared by the four screens, because it is the same decision.
+
     var result by remember { mutableStateOf("") }
+    var showShareDialog by remember { mutableStateOf(false) }
 
     fun pickOption() {
         if (options.isNotEmpty()) {
@@ -97,28 +98,70 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
         }
     }
 
-    // Implicit intent: we do not name an app, we only say "I have some text,
-    // who wants to receive it?" and Android shows the apps that can do it.
-    fun shareResult() {
+
+    // Opens the email app with the result already written in the message.
+    fun sendEmail() {
         if (result.isEmpty()) {
             return
         }
-        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, "Shake It! picked: $result")
+        val emailIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Shake It result")
+        emailIntent.putExtra(Intent.EXTRA_TEXT, "Shake It! picked: $result")
+        try {
+            context.startActivity(emailIntent)
+        } catch (e: ActivityNotFoundException) {
+            // there is no email app on this phone
         }
-        context.startActivity(Intent.createChooser(sendIntent, "Share your decision"))
+    }
+
+    // Opens the messages app with the result already written.
+    fun sendMessage() {
+        if (result.isEmpty()) {
+            return
+        }
+        val messageIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:"))
+        messageIntent.putExtra("sms_body", "Shake It! picked: $result")
+        try {
+            context.startActivity(messageIntent)
+        } catch (e: ActivityNotFoundException) {
+            // there is no messages app on this phone
+        }
     }
 
     Scaffold(containerColor = Page) { innerPadding ->
         // Only one decision screen is shown, the one the user picked before.
         Box(modifier = Modifier.padding(innerPadding)) {
             when (startPage) {
-                0 -> CoinScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
-                1 -> DiceScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
-                2 -> WheelScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
-                else -> SlotScreen(options, result, onBack, onPick = { pickOption() }, onShare = { shareResult() })
+                0 -> CoinScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
+                1 -> DiceScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
+                2 -> WheelScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
+                else -> SlotScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
             }
+        }
+
+        // Small dialog with the two ways of sharing the result.
+        if (showShareDialog) {
+            AlertDialog(
+                onDismissRequest = { showShareDialog = false },
+                title = { Text("Share Result") },
+                text = { Text("Send it by email or by message?") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showShareDialog = false
+                        sendEmail()
+                    }) {
+                        Text("Email")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showShareDialog = false
+                        sendMessage()
+                    }) {
+                        Text("Message")
+                    }
+                }
+            )
         }
     }
 }
@@ -153,7 +196,7 @@ private fun CoinScreen(
 
         Spacer(modifier = Modifier.height(34.dp))
 
-        // The coin: a big yellow circle with the side it lands on.
+
         Box(
             modifier = Modifier
                 .size(170.dp)
@@ -305,8 +348,6 @@ private fun SlotScreen(
 
         Spacer(modifier = Modifier.height(26.dp))
 
-        // The machine: a dark box with the reels inside, and two red lines
-        // like the lines of a real slot machine.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -397,7 +438,7 @@ private fun DecisionResult(emoji: String, value: String) {
     }
 }
 
-// The white button under the main button, used to share the result.
+
 @Composable
 private fun ShareButton(onShare: () -> Unit, enabled: Boolean) {
     Button(
@@ -416,7 +457,7 @@ private fun ShareButton(onShare: () -> Unit, enabled: Boolean) {
     }
 }
 
-// One of the picked options, shown as a small card.
+
 @Composable
 private fun OptionCard(text: String, modifier: Modifier = Modifier) {
     Column(
@@ -436,7 +477,7 @@ private fun OptionCard(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-// The picked options shown as small chips, used on the dice, wheel and slot screens.
+
 @Composable
 private fun OptionChips(options: List<String>) {
     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -455,7 +496,6 @@ private fun OptionChips(options: List<String>) {
     }
 }
 
-// One reel of the slot machine.
 @Composable
 private fun SlotReel(text: String, modifier: Modifier = Modifier) {
     Column(
@@ -474,7 +514,7 @@ private fun SlotReel(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-// The wheel itself: 6 coloured slices, drawn with Canvas.
+
 @Composable
 private fun WheelDrawing() {
     val sliceColors = listOf(

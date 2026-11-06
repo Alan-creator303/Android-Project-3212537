@@ -60,13 +60,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val context = LocalContext.current
-
-                // Which screen is on screen right now. The buttons change it,
-                // so there is no swiping between the screens.
                 var screen by remember { mutableStateOf("start") }
-
-                // What the user has picked, what they typed in, and which
-                // method they picked on the method screen ("Wheel" or "Slot").
                 var selectedOptions by remember { mutableStateOf(listOf<String>()) }
                 var customOptions by remember { mutableStateOf(listOf<String>()) }
                 var customText by remember { mutableStateOf("") }
@@ -76,8 +70,6 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Page
                 ) {
-                    // The Scaffold gives us the innerPadding, so our screens
-                    // stay below the status bar and above the navigation bar.
                     Scaffold(containerColor = Page) { innerPadding ->
                         Box(modifier = Modifier.padding(innerPadding)) {
                             when (screen) {
@@ -97,9 +89,6 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onBack = { screen = "start" },
                                     onNext = {
-                                        // Two options go straight to the coin, six options go
-                                        // straight to the dice. Any other number opens the
-                                        // screen where the user picks the wheel or the slot.
                                         when (selectedOptions.size) {
                                             2 -> openDecision(context, selectedOptions, 0)
                                             6 -> openDecision(context, selectedOptions, 1)
@@ -137,8 +126,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Opens the decision screen with an explicit intent. The options and the page
-// that should be shown (0 coin, 1 dice, 2 wheel, 3 slot) go in the intent.
+
 private fun openDecision(context: Context, options: List<String>, startPage: Int) {
     val intent = Intent(context, DecisionActivity::class.java)
     intent.putStringArrayListExtra(DecisionActivity.EXTRA_OPTIONS, ArrayList(options))
@@ -219,7 +207,7 @@ private fun ScreenTopBar(title: String, onBack: () -> Unit) {
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
-        // An empty space so the title stays in the middle.
+
         Spacer(modifier = Modifier.width(42.dp))
     }
 }
@@ -241,12 +229,6 @@ private fun OptionSelectionScreen(
     ) {
         ScreenTopBar(title = "Select Options", onBack = onBack)
 
-        Text(
-            text = "Choose at least 2 options",
-            modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 10.dp),
-            color = Muted,
-            fontSize = 14.sp
-        )
 
         LazyColumn(
             modifier = Modifier.weight(1f),
@@ -310,15 +292,12 @@ private fun OptionSelectionScreen(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                // With 2 options the app can go straight to the coin, and with 6
-                // straight to the dice. For any other number the button becomes
-                // Next, because the user still has to pick a method.
+
                 val goesStraight = selectedOptions.size == 2 || selectedOptions.size == 6
 
                 Button(
                     onClick = onNext,
                     modifier = Modifier.fillMaxWidth().height(54.dp),
-                    // The button only works when at least 2 options are selected.
                     enabled = selectedOptions.size >= 2,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -369,14 +348,9 @@ private fun CustomOptionSection(
     onAddCustom: () -> Unit
 ) {
     Column(modifier = Modifier.padding(horizontal = 18.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Custom", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("add your own idea", color = Purple, fontSize = 12.sp)
-        }
+        Text("Custom", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(10.dp))
 
-        // The options the user added. They can be picked like the other ones.
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(customOptions) { option ->
                 OptionChip(
@@ -430,7 +404,6 @@ private fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit)
     )
 }
 
-// Adds the option to the list, or takes it out when it is already in the list.
 private fun toggleOption(options: List<String>, option: String): List<String> {
     return if (options.contains(option)) {
         options - option
@@ -541,7 +514,7 @@ private fun MethodCard(
     }
 }
 
-// The history screen. It is empty for now: the saved decisions come later.
+
 @Composable
 private fun HistoryScreen(onBack: () -> Unit) {
     Column(
@@ -555,7 +528,7 @@ private fun HistoryScreen(onBack: () -> Unit) {
     }
 }
 
-// The big dice on the start screen.
+
 @Composable
 private fun DiceIllustration() {
     Box(
