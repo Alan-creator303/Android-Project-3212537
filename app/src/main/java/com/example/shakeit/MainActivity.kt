@@ -60,8 +60,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 val context = LocalContext.current
-                var screen by remember { mutableStateOf("start") }
-                var selectedOptions by remember { mutableStateOf(listOf<String>()) }
+                var screen by remember { mutableStateOf("start") }    //which screen is showing right now
+                var selectedOptions by remember { mutableStateOf(listOf<String>()) }  //show what the user picked and typed
                 var customOptions by remember { mutableStateOf(listOf<String>()) }
                 var customText by remember { mutableStateOf("") }
                 var method by remember { mutableStateOf("") }
@@ -127,6 +127,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
+//open the decision screen and show the options
 private fun openDecision(context: Context, options: List<String>, startPage: Int) {
     val intent = Intent(context, DecisionActivity::class.java)
     intent.putStringArrayListExtra(DecisionActivity.EXTRA_OPTIONS, ArrayList(options))
@@ -186,7 +187,7 @@ private fun StartScreen(onStart: () -> Unit, onHistory: () -> Unit) {
 }
 
 @Composable
-private fun ScreenTopBar(title: String, onBack: () -> Unit) {
+private fun ScreenTopBar(title: String, onBack: () -> Unit) {   //back button
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -293,7 +294,7 @@ private fun OptionSelectionScreen(
                 )
 
 
-                val goesStraight = selectedOptions.size == 2 || selectedOptions.size == 6
+                val goesStraight = selectedOptions.size == 2 || selectedOptions.size == 6  // 2 or 6 options go straight to a coin or a dice
 
                 Button(
                     onClick = onNext,
@@ -383,7 +384,7 @@ private fun CustomOptionSection(
 }
 
 @Composable
-private fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit) {  //detect if the options were selected or not
     Text(
         text = option,
         modifier = Modifier
@@ -404,7 +405,7 @@ private fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit)
     )
 }
 
-private fun toggleOption(options: List<String>, option: String): List<String> {
+private fun toggleOption(options: List<String>, option: String): List<String> {  // adds the option or removes it
     return if (options.contains(option)) {
         options - option
     } else {
@@ -474,7 +475,7 @@ private fun MethodChoiceScreen(
 }
 
 @Composable
-private fun MethodCard(
+private fun MethodCard(  //choose spinner wheel or slot machine
     emoji: String,
     title: String,
     description: String,
@@ -523,7 +524,6 @@ private fun HistoryScreen(onBack: () -> Unit) {
     ) {
         ScreenTopBar(title = "History", onBack = onBack)
 
-        // There is nothing to show yet, so the rest of the screen is empty.
         Spacer(modifier = Modifier.weight(1f))
     }
 }

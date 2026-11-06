@@ -59,9 +59,6 @@ class DecisionActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Read the list of options that the previous screen sent us, and which
-        // page should be shown first (0 coin, 1 dice, 2 wheel, 3 slot).
         val options: List<String> = intent.getStringArrayListExtra(EXTRA_OPTIONS) ?: emptyList()
         val startPage = intent.getIntExtra(EXTRA_START_PAGE, 0)
 
@@ -92,15 +89,14 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
     var result by remember { mutableStateOf("") }
     var showShareDialog by remember { mutableStateOf(false) }
 
-    fun pickOption() {
+    fun pickOption() {  //pick a random option
         if (options.isNotEmpty()) {
             result = options.random()
         }
     }
 
 
-    // Opens the email app with the result already written in the message.
-    fun sendEmail() {
+    fun sendEmail() {  //opens the email app with the result
         if (result.isEmpty()) {
             return
         }
@@ -110,12 +106,10 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
         try {
             context.startActivity(emailIntent)
         } catch (e: ActivityNotFoundException) {
-            // there is no email app on this phone
         }
     }
 
-    // Opens the messages app with the result already written.
-    fun sendMessage() {
+    fun sendMessage() {  //opens the messages app with the result
         if (result.isEmpty()) {
             return
         }
@@ -124,22 +118,46 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
         try {
             context.startActivity(messageIntent)
         } catch (e: ActivityNotFoundException) {
-            // there is no messages app on this phone
         }
     }
 
     Scaffold(containerColor = Page) { innerPadding ->
-        // Only one decision screen is shown, the one the user picked before.
         Box(modifier = Modifier.padding(innerPadding)) {
             when (startPage) {
-                0 -> CoinScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
-                1 -> DiceScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
-                2 -> WheelScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
-                else -> SlotScreen(options, result, onBack, onPick = { pickOption() }, onShare = { showShareDialog = true })
+                0 -> CoinScreen(
+                    options = options,
+                    result = result,
+                    onBack = onBack,
+                    onPick = { pickOption() },
+                    onShare = { showShareDialog = true }
+                )
+
+                1 -> DiceScreen(
+                    options = options,
+                    result = result,
+                    onBack = onBack,
+                    onPick = { pickOption() },
+                    onShare = { showShareDialog = true }
+                )
+
+                2 -> WheelScreen(
+                    options = options,
+                    result = result,
+                    onBack = onBack,
+                    onPick = { pickOption() },
+                    onShare = { showShareDialog = true }
+                )
+
+                else -> SlotScreen(
+                    options = options,
+                    result = result,
+                    onBack = onBack,
+                    onPick = { pickOption() },
+                    onShare = { showShareDialog = true }
+                )
             }
         }
 
-        // Small dialog with the two ways of sharing the result.
         if (showShareDialog) {
             AlertDialog(
                 onDismissRequest = { showShareDialog = false },
@@ -184,7 +202,6 @@ private fun CoinScreen(
 
         Spacer(modifier = Modifier.height(26.dp))
 
-        // The two options, one for each side of the coin.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -251,7 +268,6 @@ private fun DiceScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // The dice in the middle of the screen.
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -306,7 +322,6 @@ private fun WheelScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // The little arrow that points at the slice the wheel stops on.
         Text("▼", color = Purple, fontSize = 18.sp)
 
         WheelDrawing()
@@ -410,7 +425,6 @@ private fun TopBar(title: String, onBack: () -> Unit) {
     }
 }
 
-// The purple box that shows what the app picked.
 @Composable
 private fun DecisionResult(emoji: String, value: String) {
     Column(
@@ -516,7 +530,7 @@ private fun SlotReel(text: String, modifier: Modifier = Modifier) {
 
 
 @Composable
-private fun WheelDrawing() {
+private fun WheelDrawing() {   //draws the wheel with six slices
     val sliceColors = listOf(
         Color(0xFF8B5CF6),
         Color(0xFFF472B6),
@@ -536,7 +550,7 @@ private fun WheelDrawing() {
                 useCenter = true
             )
         }
-        // A purple circle with a white circle inside, like the pin of the wheel.
+
         drawCircle(color = Purple, radius = size.minDimension / 8f)
         drawCircle(color = Color.White, radius = size.minDimension / 11f)
     }
