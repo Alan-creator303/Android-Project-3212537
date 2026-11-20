@@ -1,7 +1,12 @@
 package com.example.shakeit
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -27,13 +32,30 @@ import com.example.shakeit.ui.screens.SlotScreen
 import com.example.shakeit.ui.screens.WheelScreen
 import com.example.shakeit.ui.theme.Page
 import com.example.shakeit.ui.theme.ShakeItTheme
+import kotlin.math.sqrt
 
-class DecisionActivity : ComponentActivity() {
+// this activity also listens to the accelerometer, so the user can shake the phone
+class DecisionActivity : ComponentActivity(), SensorEventListener {
+
+    private lateinit var sensorManager: SensorManager
+    private var accelerometer: Sensor? = null
+    private var lastShakeTime = 0L
+
+    private var options: List<String> = emptyList()
+    private var startPage = 0
+
+    // the result is kept here, so the sensor can change it as well as the buttons
+    private var result by mutableStateOf("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val options: List<String> = intent.getStringArrayListExtra(EXTRA_OPTIONS) ?: emptyList()
-        val startPage = intent.getIntExtra(EXTRA_START_PAGE, 0)
+
+        options = intent.getStringArrayListExtra(EXTRA_OPTIONS) ?: emptyList()
+        startPage = intent.getIntExtra(EXTRA_START_PAGE, 0)
+
+        // get the accelerometer, not every phone has one
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
         setContent {
             ShakeItTheme {
@@ -41,10 +63,62 @@ class DecisionActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Page
                 ) {
-                    DecisionScreens(options, startPage, onBack = { finish() })
+                    DecisionScreens(
+                        options = options,
+                        startPage = startPage,
+                        result = result,
+                        onBack = { finish() },
+                        onPick = { pickOption() }
+                    )
                 }
             }
         }
+    }
+
+    private fun pickOption() {
+        // only one decision on each screen, so shaking twice does nothing
+        if (options.isNotEmpty() && result.isEmpty()) {
+            result = options.random()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // start listening when the screen is visible
+        if (accelerometer != null) {
+            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // stop listening when the screen is not visible, to save battery
+        sensorManager.unregisterListener(this)
+    }
+
+    override fun onSensorChanged(event: SensorEvent?) {
+        if (event == null) {
+            return
+        }
+
+        val x = event.values[0]
+        val y = event.values[1]
+        val z = event.values[2]
+
+        // take gravity away, so only the movement of the phone is left
+        val force = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
+
+        if (force > 12f) {
+            val now = System.currentTimeMillis()
+            // wait 1.2 seconds, so one shake is not counted two or three times
+            if (now - lastShakeTime > 1200) {
+                lastShakeTime = now
+                pickOption()
+            }
+        }
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
     }
 
     companion object {
@@ -55,19 +129,16 @@ class DecisionActivity : ComponentActivity() {
 }
 
 @Composable
-private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () -> Unit) {
+private fun DecisionScreens(
+    options: List<String>,
+    startPage: Int,
+    result: String,
+    onBack: () -> Unit,
+    onPick: () -> Unit
+) {
     val context = LocalContext.current
 
-
-    var result by remember { mutableStateOf("") }
     var showShareDialog by remember { mutableStateOf(false) }
-
-    fun pickOption() {  //pick a random option
-        if (options.isNotEmpty()) {
-            result = options.random()
-        }
-    }
-
 
     fun sendEmail() {  //opens the email app with the result
         if (result.isEmpty()) {
@@ -101,7 +172,7 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
                     options = options,
                     result = result,
                     onBack = onBack,
-                    onPick = { pickOption() },
+                    onPick = onPick,
                     onShare = { showShareDialog = true }
                 )
 
@@ -109,7 +180,7 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
                     options = options,
                     result = result,
                     onBack = onBack,
-                    onPick = { pickOption() },
+                    onPick = onPick,
                     onShare = { showShareDialog = true }
                 )
 
@@ -117,7 +188,7 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
                     options = options,
                     result = result,
                     onBack = onBack,
-                    onPick = { pickOption() },
+                    onPick = onPick,
                     onShare = { showShareDialog = true }
                 )
 
@@ -125,7 +196,7 @@ private fun DecisionScreens(options: List<String>, startPage: Int, onBack: () ->
                     options = options,
                     result = result,
                     onBack = onBack,
-                    onPick = { pickOption() },
+                    onPick = onPick,
                     onShare = { showShareDialog = true }
                 )
             }

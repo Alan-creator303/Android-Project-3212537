@@ -25,6 +25,7 @@ import com.example.shakeit.ui.components.DecisionResult
 import com.example.shakeit.ui.components.OptionChips
 import com.example.shakeit.ui.components.ShareButton
 import com.example.shakeit.ui.components.TopBar
+import com.example.shakeit.ui.theme.Muted
 import com.example.shakeit.ui.theme.Page
 import com.example.shakeit.ui.theme.Purple
 import com.example.shakeit.ui.theme.ShakeItTheme
@@ -66,8 +67,14 @@ fun DiceScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
+        if (result.isEmpty()) {
+            Text("or shake your phone", color = Muted, fontSize = 12.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         Button(
             onClick = onPick,
+            enabled = result.isEmpty(),
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(18.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Purple)
