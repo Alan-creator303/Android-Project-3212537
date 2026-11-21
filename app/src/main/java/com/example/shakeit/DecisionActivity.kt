@@ -34,8 +34,7 @@ import com.example.shakeit.ui.theme.Page
 import com.example.shakeit.ui.theme.ShakeItTheme
 import kotlin.math.sqrt
 
-// this activity also listens to the accelerometer, so the user can shake the phone
-class DecisionActivity : ComponentActivity(), SensorEventListener {
+class DecisionActivity : ComponentActivity() {
 
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
@@ -46,6 +45,34 @@ class DecisionActivity : ComponentActivity(), SensorEventListener {
 
     // the result is kept here, so the sensor can change it as well as the buttons
     private var result by mutableStateOf("")
+
+    // the listener for the accelerometer, same way as the sensors tutorial
+    private val sensorEventListener: SensorEventListener = object : SensorEventListener {
+
+        override fun onSensorChanged(event: SensorEvent?) {
+            if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
+
+                var x = event.values[0]
+                var y = event.values[1]
+                var z = event.values[2]
+
+                // take gravity away, so only the movement of the phone is left
+                val force = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
+
+                if (force > 8f) {
+                    val now = System.currentTimeMillis()
+                    // wait 1 second, so one shake is not counted two or three times
+                    if (now - lastShakeTime > 1000) {
+                        lastShakeTime = now
+                        pickOption()
+                    }
+                }
+            }
+        }
+
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,39 +113,18 @@ class DecisionActivity : ComponentActivity(), SensorEventListener {
         super.onResume()
         // start listening when the screen is visible
         if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME)
+            sensorManager.registerListener(
+                sensorEventListener,
+                accelerometer,
+                SensorManager.SENSOR_DELAY_GAME
+            )
         }
     }
 
     override fun onPause() {
         super.onPause()
         // stop listening when the screen is not visible, to save battery
-        sensorManager.unregisterListener(this)
-    }
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        if (event == null) {
-            return
-        }
-
-        val x = event.values[0]
-        val y = event.values[1]
-        val z = event.values[2]
-
-        // take gravity away, so only the movement of the phone is left
-        val force = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
-
-        if (force > 12f) {
-            val now = System.currentTimeMillis()
-            // wait 1.2 seconds, so one shake is not counted two or three times
-            if (now - lastShakeTime > 1200) {
-                lastShakeTime = now
-                pickOption()
-            }
-        }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        sensorManager.unregisterListener(sensorEventListener)
     }
 
     companion object {
