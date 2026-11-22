@@ -1,5 +1,6 @@
 package com.example.shakeit.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -34,13 +35,28 @@ fun DecisionResult(emoji: String, value: String) {
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = if (value.isEmpty()) "Not decided yet" else value,
-            modifier = Modifier.padding(horizontal = 12.dp),
-            color = Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center
-        )
+
+        // the result fades in, the placeholder fades out
+        AnimatedVisibility(visible = value.isEmpty()) {
+            Text(
+                text = "Not decided yet",
+                modifier = Modifier.padding(horizontal = 12.dp),
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        AnimatedVisibility(visible = value.isNotEmpty()) {
+            Text(
+                text = value,
+                modifier = Modifier.padding(horizontal = 12.dp),
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
