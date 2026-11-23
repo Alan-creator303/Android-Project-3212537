@@ -1,5 +1,7 @@
 package com.example.shakeit.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +17,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,6 +42,23 @@ fun SlotScreen(
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
+    // the three reels slide down into place one after another
+    val reelOne = remember { Animatable(0f) }
+    val reelTwo = remember { Animatable(0f) }
+    val reelThree = remember { Animatable(0f) }
+
+    LaunchedEffect(result) {
+        if (result.isNotEmpty()) {
+            reelOne.snapTo(-60f)
+            reelTwo.snapTo(-60f)
+            reelThree.snapTo(-60f)
+
+            reelOne.animateTo(0f, animationSpec = tween(450))
+            reelTwo.animateTo(0f, animationSpec = tween(450))
+            reelThree.animateTo(0f, animationSpec = tween(450))
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -50,14 +72,20 @@ fun SlotScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(22.dp))
                 .background(SlotBlack, RoundedCornerShape(22.dp))
                 .padding(16.dp)
         ) {
             Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(SlotRed))
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                options.take(3).forEach { option ->
-                    SlotReel(option, Modifier.weight(1f))
+                val reels = listOf(reelOne, reelTwo, reelThree)
+                options.take(3).forEachIndexed { index, option ->
+                    SlotReel(
+                        text = if (result.isEmpty()) option else result,
+                        offsetY = reels[index].value,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))

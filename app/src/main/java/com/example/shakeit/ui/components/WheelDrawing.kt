@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.dp
 import com.example.shakeit.ui.theme.Purple
 import com.example.shakeit.ui.theme.WheelAmber
@@ -15,7 +16,7 @@ import com.example.shakeit.ui.theme.WheelPurple
 import com.example.shakeit.ui.theme.WheelRose
 
 @Composable
-fun WheelDrawing() {   //draws the wheel with six slices
+fun WheelDrawing(rotation: Float = 0f) {   //draws the wheel with six slices
     val sliceColors = listOf(
         WheelPurple,
         WheelPink,
@@ -26,14 +27,17 @@ fun WheelDrawing() {   //draws the wheel with six slices
     )
 
     Canvas(modifier = Modifier.size(210.dp)) {
-        val slice = 360f / sliceColors.size
-        sliceColors.forEachIndexed { index, color ->
-            drawArc(
-                color = color,
-                startAngle = index * slice,
-                sweepAngle = slice,
-                useCenter = true
-            )
+        // the slices are turned by "rotation" degrees
+        rotate(degrees = rotation, pivot = center) {
+            val slice = 360f / sliceColors.size
+            sliceColors.forEachIndexed { index, color ->
+                drawArc(
+                    color = color,
+                    startAngle = index * slice,
+                    sweepAngle = slice,
+                    useCenter = true
+                )
+            }
         }
 
         drawCircle(color = Purple, radius = size.minDimension / 8f)

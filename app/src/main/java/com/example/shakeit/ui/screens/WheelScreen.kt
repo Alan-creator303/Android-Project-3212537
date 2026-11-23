@@ -1,5 +1,7 @@
 package com.example.shakeit.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +13,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +36,21 @@ fun WheelScreen(
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
+    // the wheel turns when a new result comes in
+    val wheelAngle = remember { Animatable(0f) }
+
+    LaunchedEffect(result) {
+        if (result.isNotEmpty()) {
+            val index = options.indexOf(result)
+            if (index >= 0) {
+                val slice = 360f / 6f
+                // three full turns, then stop with the chosen slice under the pointer
+                val target = 360f * 3f + 240f - (index % 6) * slice
+                wheelAngle.animateTo(target, animationSpec = tween(1600))
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,7 +67,7 @@ fun WheelScreen(
 
         Text("▼", color = Purple, fontSize = 18.sp)
 
-        WheelDrawing()
+        WheelDrawing(rotation = wheelAngle.value)
 
         Spacer(modifier = Modifier.height(16.dp))
 
