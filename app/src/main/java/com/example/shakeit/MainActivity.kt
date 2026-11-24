@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.example.shakeit.data.HistoryStore
 import com.example.shakeit.ui.screens.HistoryScreen
 import com.example.shakeit.ui.screens.MethodChoiceScreen
 import com.example.shakeit.ui.screens.OptionSelectionScreen
@@ -82,7 +83,11 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
 
-                                "history" -> HistoryScreen(onBack = { screen = "start" })
+                                "history" -> HistoryScreen(
+                                    decisions = HistoryStore.items.value,
+                                    onBack = { screen = "start" },
+                                    onClear = { HistoryStore.clear() }
+                                )
 
                                 else -> StartScreen(
                                     onStart = { screen = "options" },

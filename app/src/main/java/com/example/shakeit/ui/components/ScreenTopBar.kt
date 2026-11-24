@@ -18,7 +18,7 @@ import com.example.shakeit.ui.theme.Ink
 import com.example.shakeit.ui.theme.Purple
 
 @Composable
-fun ScreenTopBar(title: String, onBack: () -> Unit) {   //back button
+fun ScreenTopBar(title: String, onBack: () -> Unit, onClear: (() -> Unit)? = null) {   //back button
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -40,6 +40,16 @@ fun ScreenTopBar(title: String, onBack: () -> Unit) {   //back button
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.width(42.dp))
+        if (onClear != null) {
+            Text(
+                text = "🗑",
+                modifier = Modifier
+                    .clickable { onClear() }
+                    .padding(horizontal = 10.dp),
+                fontSize = 20.sp
+            )
+        } else {
+            Spacer(modifier = Modifier.width(42.dp))
+        }
     }
 }

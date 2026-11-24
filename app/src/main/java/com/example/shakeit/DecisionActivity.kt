@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.example.shakeit.data.HistoryStore
 import com.example.shakeit.ui.screens.CoinScreen
 import com.example.shakeit.ui.screens.DiceScreen
 import com.example.shakeit.ui.screens.SlotScreen
@@ -105,7 +106,9 @@ class DecisionActivity : ComponentActivity() {
     private fun pickOption() {
         // only one decision on each screen, so shaking twice does nothing
         if (options.isNotEmpty() && result.isEmpty()) {
-            result = options.random()
+            val picked = options.random()
+            result = picked
+            HistoryStore.add(picked)
         }
     }
 
