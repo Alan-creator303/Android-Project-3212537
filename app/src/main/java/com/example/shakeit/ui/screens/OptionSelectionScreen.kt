@@ -2,6 +2,8 @@ package com.example.shakeit.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,8 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -136,6 +136,7 @@ fun OptionSelectionScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OptionCategory(
     title: String,
@@ -146,8 +147,12 @@ fun OptionCategory(
     Column(modifier = Modifier.padding(horizontal = 18.dp)) {
         Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(10.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(options) { option ->
+        // the chips wrap onto the next line, so no option is hidden
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { option ->
                 OptionChip(
                     option = option,
                     isSelected = selectedOptions.contains(option),
@@ -158,6 +163,7 @@ fun OptionCategory(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CustomOptionSection(
     customOptions: List<String>,
@@ -171,8 +177,11 @@ fun CustomOptionSection(
         Text("Custom", color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(10.dp))
 
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(customOptions) { option ->
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            customOptions.forEach { option ->
                 OptionChip(
                     option = option,
                     isSelected = selectedOptions.contains(option),
