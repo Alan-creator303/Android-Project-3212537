@@ -44,10 +44,11 @@ class DecisionActivity : ComponentActivity() {
     private var options: List<String> = emptyList()
     private var startPage = 0
 
-    // the result is kept here, so the sensor can change it as well as the buttons
+    // the result is saved here so the buttons and the shake can change it
     private var result by mutableStateOf("")
 
-    // the listener for the accelerometer, same way as the sensors tutorial
+    // --- accelerometer ---
+    // the sensor listener, same as the sensors tutorial
     private val sensorEventListener: SensorEventListener = object : SensorEventListener {
 
         override fun onSensorChanged(event: SensorEvent?) {
@@ -57,12 +58,12 @@ class DecisionActivity : ComponentActivity() {
                 var y = event.values[1]
                 var z = event.values[2]
 
-                // take gravity away, so only the movement of the phone is left
+                // take gravity out, only the shake is left
                 val force = sqrt(x * x + y * y + z * z) - SensorManager.GRAVITY_EARTH
 
                 if (force > 8f) {
                     val now = System.currentTimeMillis()
-                    // wait 1 second, so one shake is not counted two or three times
+                    // wait 1 second so one shake is not counted twice
                     if (now - lastShakeTime > 1000) {
                         lastShakeTime = now
                         pickOption()
@@ -104,7 +105,7 @@ class DecisionActivity : ComponentActivity() {
     }
 
     private fun pickOption() {
-        // only one decision on each screen, so shaking twice does nothing
+        // one decision per screen, shaking twice does nothing
         if (options.isNotEmpty() && result.isEmpty()) {
             val picked = options.random()
             result = picked
@@ -126,7 +127,7 @@ class DecisionActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // stop listening when the screen is not visible, to save battery
+        // stop listening when the screen is gone, it saves battery
         sensorManager.unregisterListener(sensorEventListener)
     }
 
@@ -149,7 +150,8 @@ private fun DecisionScreens(
 
     var showShareDialog by remember { mutableStateOf(false) }
 
-    fun sendEmail() {  //opens the email app with the result
+    // opens the email app with the result
+    fun sendEmail() {
         if (result.isEmpty()) {
             return
         }
@@ -162,7 +164,8 @@ private fun DecisionScreens(
         }
     }
 
-    fun sendMessage() {  //opens the messages app with the result
+    // opens the messages app with the result
+    fun sendMessage() {
         if (result.isEmpty()) {
             return
         }

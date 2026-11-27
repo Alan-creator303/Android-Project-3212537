@@ -113,7 +113,7 @@ fun OptionSelectionScreen(
                 )
 
 
-                val goesStraight = selectedOptions.size == 2 || selectedOptions.size == 6  // 2 or 6 options go straight to a coin or a dice
+                val goesStraight = selectedOptions.size == 2 || selectedOptions.size == 6  // 2 or 6 options go straight to the coin or the dice
 
                 Button(
                     onClick = onNext,
@@ -147,7 +147,8 @@ fun OptionCategory(
     Column(modifier = Modifier.padding(horizontal = 18.dp)) {
         Text(title, color = Ink, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(10.dp))
-        // the chips wrap onto the next line, so no option is hidden
+        // --- options grid ---
+        // chips wrap to the next line, nothing is hidden
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)

@@ -36,7 +36,7 @@ fun DecisionResult(emoji: String, value: String) {
         )
         Spacer(modifier = Modifier.height(6.dp))
 
-        // the result fades in, the placeholder fades out
+        // the result fades in and the placeholder fades out
         AnimatedVisibility(visible = value.isEmpty()) {
             Text(
                 text = "Not decided yet",

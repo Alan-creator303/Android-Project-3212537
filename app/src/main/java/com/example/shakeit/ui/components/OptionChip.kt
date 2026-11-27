@@ -18,7 +18,7 @@ import com.example.shakeit.ui.theme.Purple
 import com.example.shakeit.ui.theme.SoftPurple
 
 @Composable
-fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit) {  //detect if the options were selected or not
+fun OptionChip(option: String, isSelected: Boolean, onClick: () -> Unit) {  // the chip turns purple when it is picked
     Text(
         text = option,
         modifier = Modifier

@@ -32,8 +32,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             ShakeItTheme {
                 val context = LocalContext.current
-                var screen by remember { mutableStateOf("start") }    //which screen is showing right now
-                var selectedOptions by remember { mutableStateOf(listOf<String>()) }  //show what the user picked and typed
+                var screen by remember { mutableStateOf("start") }   // which screen we are on
+                var selectedOptions by remember { mutableStateOf(listOf<String>()) }  // what the user picked
                 var customOptions by remember { mutableStateOf(listOf<String>()) }
                 var customText by remember { mutableStateOf("") }
                 var method by remember { mutableStateOf("") }
@@ -61,10 +61,12 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onBack = { screen = "start" },
                                     onNext = {
-                                        when (selectedOptions.size) {
-                                            2 -> openDecision(context, selectedOptions, 0)
-                                            6 -> openDecision(context, selectedOptions, 1)
-                                            else -> screen = "method"
+                                        if (selectedOptions.size == 2) {
+                                            openDecision(context, selectedOptions, 0)
+                                        } else if (selectedOptions.size == 6) {
+                                            openDecision(context, selectedOptions, 1)
+                                        } else {
+                                            screen = "method"
                                         }
                                     }
                                 )
@@ -103,7 +105,7 @@ class MainActivity : ComponentActivity() {
 }
 
 
-//open the decision screen and show the options
+// open the decision screen with the options
 private fun openDecision(context: Context, options: List<String>, startPage: Int) {
     val intent = Intent(context, DecisionActivity::class.java)
     intent.putStringArrayListExtra(DecisionActivity.EXTRA_OPTIONS, ArrayList(options))

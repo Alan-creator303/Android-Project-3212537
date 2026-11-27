@@ -18,7 +18,7 @@ import com.example.shakeit.ui.theme.Ink
 import com.example.shakeit.ui.theme.Purple
 
 @Composable
-fun ScreenTopBar(title: String, onBack: () -> Unit, onClear: (() -> Unit)? = null) {   //back button
+fun ScreenTopBar(title: String, onBack: () -> Unit, onClear: (() -> Unit)? = null) {   // the back arrow
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically

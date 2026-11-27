@@ -2,19 +2,27 @@ package com.example.shakeit.ui.screens
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -36,17 +44,28 @@ fun WheelScreen(
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
-    // the wheel turns when a new result comes in
+    // --- spin animation ---
+    // the wheel spins when we get a result
     val wheelAngle = remember { Animatable(0f) }
+
+    // --- loading spinner ---
+    // true while the wheel is turning, so we can show the loading spinner
+    var isSpinning by remember { mutableStateOf(false) }
 
     LaunchedEffect(result) {
         if (result.isNotEmpty()) {
             val index = options.indexOf(result)
             if (index >= 0) {
+                isSpinning = true
+
                 val slice = 360f / 6f
-                // three full turns, then stop with the chosen slice under the pointer
-                val target = 360f * 3f + 240f - (index % 6) * slice
+                // the pointer is at the top, that is 270 degrees
+                // so turn the wheel until the middle of our slice is there
+                val middleOfSlice = (index % 6) * slice + slice / 2f
+                val target = 360f * 3f + (270f - middleOfSlice)
                 wheelAngle.animateTo(target, animationSpec = tween(1600))
+
+                isSpinning = false
             }
         }
     }
@@ -70,6 +89,21 @@ fun WheelScreen(
         WheelDrawing(rotation = wheelAngle.value)
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        // while the wheel is turning, show a small loading spinner
+        Box(modifier = Modifier.height(26.dp), contentAlignment = Alignment.Center) {
+            if (isSpinning) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Purple,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Deciding...", color = Muted, fontSize = 13.sp)
+                }
+            }
+        }
 
         DecisionResult(emoji = "🎡", value = result)
 

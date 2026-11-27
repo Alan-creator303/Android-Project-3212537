@@ -97,7 +97,7 @@ fun MethodChoiceScreen(
 }
 
 @Composable
-fun MethodCard(  //choose spinner wheel or slot machine
+fun MethodCard(  // one card, the wheel or the slot
     emoji: String,
     title: String,
     description: String,

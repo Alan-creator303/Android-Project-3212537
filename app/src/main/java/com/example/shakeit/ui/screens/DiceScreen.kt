@@ -43,7 +43,8 @@ fun DiceScreen(
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
-    // the dice turns around when a new result comes in
+    // --- dice animation ---
+    // the dice spins when we get a result
     val diceAngle = remember { Animatable(0f) }
 
     LaunchedEffect(result) {

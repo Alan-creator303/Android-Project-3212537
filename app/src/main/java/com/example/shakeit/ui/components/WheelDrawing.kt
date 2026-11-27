@@ -16,7 +16,7 @@ import com.example.shakeit.ui.theme.WheelPurple
 import com.example.shakeit.ui.theme.WheelRose
 
 @Composable
-fun WheelDrawing(rotation: Float = 0f) {   //draws the wheel with six slices
+fun WheelDrawing(rotation: Float = 0f) {   // draws the wheel, six slices
     val sliceColors = listOf(
         WheelPurple,
         WheelPink,
@@ -27,7 +27,7 @@ fun WheelDrawing(rotation: Float = 0f) {   //draws the wheel with six slices
     )
 
     Canvas(modifier = Modifier.size(210.dp)) {
-        // the slices are turned by "rotation" degrees
+        // turn all the slices by this angle
         rotate(degrees = rotation, pivot = center) {
             val slice = 360f / sliceColors.size
             sliceColors.forEachIndexed { index, color ->

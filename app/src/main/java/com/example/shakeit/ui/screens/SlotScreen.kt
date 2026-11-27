@@ -42,7 +42,8 @@ fun SlotScreen(
     onPick: () -> Unit,
     onShare: () -> Unit
 ) {
-    // the three reels slide down into place one after another
+    // --- reel animation ---
+    // the reels come down one by one
     val reelOne = remember { Animatable(0f) }
     val reelTwo = remember { Animatable(0f) }
     val reelThree = remember { Animatable(0f) }
@@ -79,14 +80,25 @@ fun SlotScreen(
             Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(SlotRed))
             Spacer(modifier = Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                val reels = listOf(reelOne, reelTwo, reelThree)
-                options.take(3).forEachIndexed { index, option ->
-                    SlotReel(
-                        text = if (result.isEmpty()) option else result,
-                        offsetY = reels[index].value,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                val first = options.take(3)[0]
+                val second = options.take(3)[1]
+                val third = options.take(3)[2]
+
+                SlotReel(
+                    text = if (result.isEmpty()) first else result,
+                    offsetY = reelOne.value,
+                    modifier = Modifier.weight(1f)
+                )
+                SlotReel(
+                    text = if (result.isEmpty()) second else result,
+                    offsetY = reelTwo.value,
+                    modifier = Modifier.weight(1f)
+                )
+                SlotReel(
+                    text = if (result.isEmpty()) third else result,
+                    offsetY = reelThree.value,
+                    modifier = Modifier.weight(1f)
+                )
             }
             Spacer(modifier = Modifier.height(10.dp))
             Box(modifier = Modifier.fillMaxWidth().height(3.dp).background(SlotRed))
